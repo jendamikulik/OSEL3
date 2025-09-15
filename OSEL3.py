@@ -22,7 +22,7 @@ def unsat_count(cnf, sigma):
 # Fázová chyba pro dané sigma (bez auto-locku, čistá geometrie toku)
 def delta_phi(cnf, sigma, Phi_base, Phi_unit, x, t, omega, q=Q_E):
     u = unsat_count(cnf, sigma)
-    print("UNSAT clauses u =", u)
+    #print("UNSAT clauses u =", u)
     Phi0 = (2*math.pi*HBAR)/q
     Phi  = Phi_base + u*Phi_unit
     dphi_geo = 2*math.pi*((Phi / Phi0) % 1.0)
@@ -49,12 +49,17 @@ def solve_sat_by_resonance(cnf, n, tol=0.02, steps=2000):
             return True, step, sigma, best
         # vyzkoušej lokálně nejlepší flip
         j_star, val_star = None, best
-        for j in range(n):
-            sigma[j] *= -1
-            val = delta_phi(cnf, sigma, Phi_base, Phi_unit, x, t, omega)
-            if abs(val) < abs(val_star):
-                j_star, val_star = j, val
-            sigma[j] *= -1
+
+        #for j in range(n):
+        #    sigma[j] *= -1
+        #    val = delta_phi(cnf, sigma, Phi_base, Phi_unit, x, t, omega)
+        #    if abs(val) < abs(val_star):
+        #        j_star, val_star = j, val
+        #    sigma[j] *= -1
+
+        val = np.array([delta_phi(cnf, sigma[:j] + [-sigma[j]] + sigma[j + 1:], Phi_base, Phi_unit, x, t, omega)
+                                       for j in range(n)])
+
         if j_star is None:
             # náhodný krok (WalkSAT prvek)
             j_star = random.randrange(n)
@@ -78,7 +83,7 @@ def random_3sat(n: int, m: int):
     return cnf
 
 if __name__=="__main__":
-    formula = random_3sat(n=200, m=860)
+    formula = random_3sat(n=10000, m=42000)
     print(formula)
-    out = solve_sat_by_resonance(cnf=formula, n=200)
+    out = solve_sat_by_resonance(cnf=formula, n=10000)
     print(out)
